@@ -16,7 +16,9 @@ public class Game {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "app_id")
+    private Long id;
+
+    @Column(name = "app_id", unique = true, nullable = false)
     private Long appId;
 
     @Column(nullable = false)
@@ -30,7 +32,7 @@ public class Game {
     @Column(name = "peak_ccu")
     private Integer peakCCU;   //최대 동시 접속자 수
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String developer;
 
     private String publisher;
@@ -39,15 +41,15 @@ public class Game {
     private String headerImage;
 
     @ElementCollection
-    @CollectionTable(name = "game_genre", joinColumns = @JoinColumn(name = "app_id"))
+    @CollectionTable(name = "game_genre", joinColumns = @JoinColumn(name = "game_id"))
     private List<String> genres;
 
     @ElementCollection
-    @CollectionTable(name = "game_tag", joinColumns = @JoinColumn(name = "app_id"))
+    @CollectionTable(name = "game_tag", joinColumns = @JoinColumn(name = "game_id"))
     private List<String> tags;
 
     @ElementCollection
-    @CollectionTable(name = "game_language", joinColumns = @JoinColumn(name = "app_id"))
+    @CollectionTable(name = "game_language", joinColumns = @JoinColumn(name = "game_id"))
     @Column(name = "language", nullable = false)
     private List<String> supportedLanguages;
 
