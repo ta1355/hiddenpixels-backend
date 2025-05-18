@@ -8,7 +8,9 @@ public record GameDTO(
         Long appId,
         String name,
         LocalDateTime releaseDate,
-        String price,
+        String price,  //달러 금액
+        String priceInKRW,
+        String storeURL,
         Integer peakCCU,
         String developer,
         String publisher,
