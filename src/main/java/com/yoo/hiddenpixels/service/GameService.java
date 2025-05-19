@@ -6,7 +6,9 @@ import com.yoo.hiddenpixels.repository.game.GameRepository;
 import com.yoo.hiddenpixels.utils.PageUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +29,14 @@ public class GameService {
 
     // 전체 조회
     public Page<GameDTO> findGameAll(Pageable pageable) {
+
+        if (!pageable.getSort().isSorted()) {
+            pageable = PageRequest.of(
+                    pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "peakCCU")
+            );
+        }
         return gameRepository.findAll(pageable).map(this::toDto);
     }
 
@@ -38,13 +48,15 @@ public class GameService {
 
     // 개발자 검색
     public Page<GameDTO> findByDeveloper(String developer, Pageable pageable){
-        return gameRepository.findByDeveloperContainingIgnoreCase(developer,pageable).map(this::toDto);
+        return gameRepository.findByDeveloperContainingIgnoreCase(developer,pageable)
+                .map(this::toDto);
     }
 
     // 장르 검색
     public Page<GameDTO> findByGenre(String genre, Pageable pageable) {
         List<Game> games = gameRepository.findBygGenre(genre, pageable);
-        List<GameDTO> dtos = games.stream().map(this::toDto).toList();
+        List<GameDTO> dtos = games.stream()
+                .map(this::toDto).toList();
         return PageUtils.<GameDTO>toPage(pageable).apply(dtos);
     }
 
@@ -64,9 +76,8 @@ public class GameService {
 
     // 가격 이하 검색 (List → Page 변환)
     public Page<GameDTO> findByPriceLessThanEqual(double price, Pageable pageable) {
-        List<Game> games = gameRepository.findByPriceLessThanEqual(price, pageable);
-        List<GameDTO> dtos = games.stream().map(this::toDto).toList();
-        return PageUtils.<GameDTO>toPage(pageable).apply(dtos);
+        return gameRepository.findByPriceLessThanEqual(price, pageable)
+                .map(this::toDto);
     }
 
 

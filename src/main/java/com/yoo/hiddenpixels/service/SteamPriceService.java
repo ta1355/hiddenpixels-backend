@@ -13,30 +13,35 @@ public class SteamPriceService {
 
     private final RestTemplate restTemplate;
 
-
     public SteamPriceInfo getSteamGamePrice(Long appId) {
         String url = "https://store.steampowered.com/api/appdetails";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(url)
                 .queryParam("appids", appId)
-                .queryParam("cc", "KR")  // 한화로 가져오기 위해 'KR' (한국) 사용
-                .queryParam("l", "korean");  // 한글로 표시
+                .queryParam("cc", "KR")    // 한화로 가져오기 위해 'KR' (한국) 사용
+                .queryParam("l", "korean"); // 한글로 표시
 
-        ResponseEntity<String> response = restTemplate.getForEntity(uriBuilder.toUriString(), String.class);
-        JSONObject responseJson = new JSONObject(response.getBody());
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(uriBuilder.toUriString(), String.class);
+            JSONObject responseJson = new JSONObject(response.getBody());
 
-        // 응답에서 가격 정보와 URL 추출
-        if (responseJson.getJSONObject(appId.toString()).getBoolean("success")) {
-            JSONObject data = responseJson.getJSONObject(appId.toString()).getJSONObject("data");
+            if (responseJson.getJSONObject(appId.toString()).getBoolean("success")) {
+                JSONObject data = responseJson.getJSONObject(appId.toString()).getJSONObject("data");
 
-            // 가격 정보를 '₩' 형식으로 가져옴
-            String finalFormattedPrice = data.getJSONObject("price_overview").getString("final_formatted");
-
-            // Steam 상점 URL (기본 URL에 appId를 추가)
-            String storeUrl = "https://store.steampowered.com/app/" + appId;
-
-            // 반환 값
-            return new SteamPriceInfo(finalFormattedPrice, storeUrl);
-        } else {
+                // price_overview가 존재하는지 체크
+                if (data.has("price_overview")) {
+                    String finalFormattedPrice = data.getJSONObject("price_overview").getString("final_formatted");
+                    String storeUrl = "https://store.steampowered.com/app/" + appId;
+                    return new SteamPriceInfo(finalFormattedPrice, storeUrl);
+                } else {
+                    // 무료 게임 등 가격 정보가 없는 경우
+                    String storeUrl = "https://store.steampowered.com/app/" + appId;
+                    return new SteamPriceInfo("가격 정보 없음", storeUrl);
+                }
+            } else {
+                return new SteamPriceInfo("가격 정보 없음", "");
+            }
+        } catch (Exception e) {
+            // 네트워크 오류, JSON 파싱 오류 등 예외 발생 시
             return new SteamPriceInfo("가격 정보 없음", "");
         }
     }
